@@ -2,7 +2,8 @@
 #include <FastLED.h>
 
 #define TOTAL_NUM_LEDS 144
-#define LED_PIN 5 // D1 on the ESP8266 E12
+#define LED_PIN_A 5 // D1 on the ESP8266 E12
+#define LED_PIN_B 4 // D2 on the ESP8266 E12
 #define ERROR_DURATION 1000
 #define PROGRESS_SECONDS 5
 
@@ -63,10 +64,12 @@ void (*draw)() = draw_null;
 
 void init_patterns()
 {
-    pinMode(LED_PIN, OUTPUT);
-    FastLED.addLeds<WS2812B, LED_PIN, GRB>(g_LEDs, TOTAL_NUM_LEDS);
-    FastLED.setBrightness(5);
-    draw = &draw_rainbow;
+    pinMode(LED_PIN_A, OUTPUT);
+    pinMode(LED_PIN_B, OUTPUT);
+    FastLED.addLeds<WS2812B, LED_PIN_A, GRB>(g_LEDs, TOTAL_NUM_LEDS);
+    FastLED.addLeds<WS2812B, LED_PIN_B, GRB>(g_LEDs, TOTAL_NUM_LEDS);
+    FastLED.setBrightness(100);
+    draw = &draw_gradient;
 }
 
 void draw_led()
@@ -87,13 +90,13 @@ bool select_pattern(String name)
     }
     else if (name.equalsIgnoreCase("null"))
         draw = &draw_null;
-    else if (name.equalsIgnoreCase("error"))
+    else
     {
         g_nextErrorMillis = 0;
         g_errorColor = CRGB::Yellow;
         draw = &draw_error;
+        if (!name.equalsIgnoreCase("error"))
+            return false;
     }
-    else
-        return false;
     return true;
 }

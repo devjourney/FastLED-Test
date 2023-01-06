@@ -1,8 +1,7 @@
 #include <Arduino.h>
 
 void init_patterns();
-void init_network_begin();
-int init_network_continue();
+bool init_network();
 void init_web();
 void handle_client();
 bool select_pattern(String name);
