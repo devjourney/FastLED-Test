@@ -8,7 +8,7 @@ bool g_webInitialized = false;
 
 void handle_root()
 {
-    g_webServer.send(200, "text/html", "<html><head><title>LED Control</title></head><body><h1>LED Control</h1><ul><li><a href=\"/rainbow\">Rainbow</a> - Draw a rainbow.</li><li><a href=\"/gradient\">Gradient</a> - Draw a gradient.</li><li><a href=\"/error\">Error</a> - Draw an error.</li><li><a href=\"/progress\">Progress</a> - Draw a progress bar.</li></ul></body></html>");
+    g_webServer.send(200, "text/html", "<html><head><title>LED Control</title></head><body><h1>LED Control</h1><ul><li><a href=\"/rainbow\">Rainbow</a> - Draw a rainbow.</li><li><a href=\"/gradient\">Gradient</a> - Draw a gradient.</li><li><a href=\"/error\">Error</a> - Draw an error.</li><li><a href=\"/progress\">Progress</a> - Draw a progress bar.</li><li><a href=\"/fire\">Fire</a> - Draw a firestorm.</li></ul></body></html>");
 }
 
 void handle_not_found()
