@@ -5,15 +5,20 @@
 // 1. Allow web caller to set brightness from 10 to 120
 // 2. Use photoresistor to determine brightness level
 // 3. Use web service to determine brightness level by location, weather, and time of day
-// 4. Cycle between animation over time
-// 5. Change fire palette over time
+// 4. Cycle between animations over time
+// 5. Change fire palettes over time
+// 6. Use MQTT to send palette, animation, and brightness changes
+// 7. Use image to approx. colors
 
-#define COUNT_LED 144
+#define STRIP_COUNT 1
+#define COUNT_LED 288
 #define COLOR_ORDER GRB // EOrder
 #define STRIP_TYPE WS2812B // RGB_ORDER
 #define COLOR_CORRECTION TypicalSMD5050 // LEDColorCorrection
 #define LED_PIN_A 5 // GPIO5 is pin D1 on the ESP8266 E12
+#if (STRIP_COUNT > 1)
 #define LED_PIN_B 4 // GPIO4 is pin D2 on the ESP8266 E12
+#endif
 #define BRIGHTNESS 50
 CRGB g_LED1[COUNT_LED] = {0};
 
@@ -88,8 +93,7 @@ void draw_fire()
 
 void draw_null()
 {
-    fill_solid(g_LED1, COUNT_LED, CRGB::Black);
-    FastLED.show();
+    FastLED.showColor(CRGB::Black);
 }
 
 void draw_error()
@@ -99,10 +103,9 @@ void draw_error()
     {
         // oscillate between red and yellow
         g_errorColor = g_errorColor.g == 0xFF ? CRGB::Red : CRGB::Yellow;
-        fill_solid(g_LED1, COUNT_LED, g_errorColor);
+        FastLED.showColor(g_errorColor);
         g_nextErrorMillis = now + ERROR_DURATION;
     }
-    FastLED.show();
 }
 
 void draw_progress()
@@ -137,9 +140,11 @@ void init_patterns()
 {
     g_Pal = HeatColors_p;
     pinMode(LED_PIN_A, OUTPUT);
-    pinMode(LED_PIN_B, OUTPUT);
     FastLED.addLeds<STRIP_TYPE, LED_PIN_A, COLOR_ORDER>(g_LED1, COUNT_LED).setCorrection(COLOR_CORRECTION);
+#if (STRIP_COUNT > 1)
+    pinMode(LED_PIN_B, OUTPUT);
     FastLED.addLeds<STRIP_TYPE, LED_PIN_B, COLOR_ORDER>(g_LED1, COUNT_LED).setCorrection(COLOR_CORRECTION);
+#endif
     FastLED.setBrightness(BRIGHTNESS);
 }
 
