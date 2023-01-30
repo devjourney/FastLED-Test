@@ -2,13 +2,11 @@
 #include <FastLED.h>
 
 // TODO
-// 1. Allow web caller to set brightness from 10 to 120
-// 2. Use photoresistor to determine brightness level
-// 3. Use web service to determine brightness level by location, weather, and time of day
-// 4. Cycle between animations over time
-// 5. Change fire palettes over time
-// 6. Use MQTT to send palette, animation, and brightness changes
-// 7. Use image to approx. colors
+// 1. Use photoresistor to determine brightness level
+// 2. Use web service to determine brightness level by location, weather, and time of day
+// 3. Cycle between animations over time
+// 4. Change fire palettes over time
+// 5. Use MQTT to send palette, animation, and brightness changes
 
 #define STRIP_COUNT 1
 #define COUNT_LED 288
@@ -19,7 +17,14 @@
 #if (STRIP_COUNT > 1)
 #define LED_PIN_B 4 // GPIO4 is pin D2 on the ESP8266 E12
 #endif
-#define BRIGHTNESS 50
+#define MIN_BRIGHTNESS 10
+#define STEP_BRIGHTNESS 10
+#define MAX_BRIGHTNESS 150
+#define ROTATION_DURATION 60000
+
+uint8_t g_brightness = 50;
+bool g_rotating = true;
+unsigned long g_nextRotationMillis = 0;
 CRGB g_LED1[COUNT_LED] = {0};
 
 // rainbow values
@@ -145,14 +150,29 @@ void init_patterns()
     pinMode(LED_PIN_B, OUTPUT);
     FastLED.addLeds<STRIP_TYPE, LED_PIN_B, COLOR_ORDER>(g_LED1, COUNT_LED).setCorrection(COLOR_CORRECTION);
 #endif
-    FastLED.setBrightness(BRIGHTNESS);
+    FastLED.setBrightness(g_brightness);
 }
 
 void draw_led()
 {
-    random16_add_entropy(random16());
     draw();
-;}
+    if (g_rotating)
+    {
+        unsigned long now = millis();
+        if (now > g_nextRotationMillis)
+        {
+            if (draw == &draw_gradient)
+                draw = &draw_rainbow;
+            else if (draw == &draw_rainbow)
+                draw = &draw_fire;
+            else if (draw == &draw_fire)
+                draw = &draw_progress;
+            else
+                draw = &draw_gradient;
+            g_nextRotationMillis = now + ROTATION_DURATION;
+        }
+    }
+}
 
 bool select_pattern(String name)
 {
@@ -178,4 +198,27 @@ bool select_pattern(String name)
             return false;
     }
     return true;
+}
+
+bool exec_control(String name)
+{
+    if (name.equalsIgnoreCase("brighten"))
+    {
+        if (g_brightness + STEP_BRIGHTNESS <= MAX_BRIGHTNESS)
+        {
+            g_brightness += STEP_BRIGHTNESS;
+            FastLED.setBrightness(g_brightness);
+            return true;
+        }
+    }
+    else if (name.equalsIgnoreCase("dim"))
+    {
+        if (g_brightness - STEP_BRIGHTNESS >= MIN_BRIGHTNESS)
+        {
+            g_brightness -= STEP_BRIGHTNESS;
+            FastLED.setBrightness(g_brightness);
+            return true;
+        }
+    }
+    return false;
 }
